@@ -1,0 +1,17 @@
+---
+helmDefaults:
+  createNamespace: true
+
+repositories:
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+
+releases:
+  - name: loki
+    namespace: logging
+    chart: grafana/loki
+    version: 6.55.0
+    labels:
+      stack: logging
+    values:
+      - ./helm-values/loki-values.yaml

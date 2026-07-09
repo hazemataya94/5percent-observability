@@ -1,0 +1,29 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: sample-metrics-app-alerts
+  namespace: fivepercent-observability
+  labels:
+    app.kubernetes.io/name: sample-metrics-app-alerts
+    app.kubernetes.io/part-of: fivepercent-observability-lab
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: sample-metrics-app.rules
+      rules:
+        - alert: FivePercentSampleAppDown
+          expr: (sum(up{namespace="fivepercent-observability", service="sample-metrics-app"}) < 1) or absent(up{namespace="fivepercent-observability", service="sample-metrics-app"})
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: Sample metrics app has no healthy scrape targets.
+            description: Prometheus cannot scrape any healthy sample app targets in the fivepercent-observability namespace.
+        - alert: FivePercentSampleAppHighErrorRate
+          expr: sum(rate(fivepercent_http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(fivepercent_http_requests_total[5m])), 0.001) > 0.05
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: Sample metrics app 5xx rate is above 5 percent.
+            description: More than 5 percent of observed sample app requests returned 5xx status codes over the last 5 minutes.

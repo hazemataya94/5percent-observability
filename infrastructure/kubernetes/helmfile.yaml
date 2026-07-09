@@ -1,0 +1,17 @@
+---
+helmDefaults:
+  createNamespace: true
+
+repositories:
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+
+releases:
+  - name: kube-prometheus-stack
+    namespace: monitoring
+    chart: prometheus-community/kube-prometheus-stack
+    version: 87.10.1
+    labels:
+      stack: monitoring
+    values:
+      - ./helm-values/kube-prometheus-stack-values.yaml

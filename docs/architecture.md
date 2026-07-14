@@ -57,6 +57,21 @@ sequenceDiagram
   Grafana->>Prometheus: query fivepercent_* metrics
 ```
 
+## Learning And Documentation Flow
+The documentation separates conceptual explanation from executable operations while keeping each topic linked to an observable checkpoint.
+
+```mermaid
+flowchart LR
+  architecture["Architecture<br>components and boundaries"] --> fundamentals["Fundamentals<br>ordered theory"]
+  fundamentals --> checkpoint["Core runbook checkpoints<br>local evidence"]
+  checkpoint --> design["Observability design<br>apply the concepts"]
+  design --> optional["Optional extensions<br>alerting and logging"]
+  optional --> appendices["Deep-dive appendices<br>component details"]
+```
+
+Start with this architecture document, continue through `docs/fundamentals/README.md`, and execute the linked checkpoints in `docs/runbooks/core-observability-lab.md`.
+The optional alerting and logging runbooks come after the core metrics path.
+
 ## Boundary Rules
 - `Makefile` owns local commands and hides repeated flags from learners.
 - `infrastructure/kubernetes/helmfile.yaml` owns Helm chart releases.
@@ -64,6 +79,9 @@ sequenceDiagram
 - `infrastructure/kubernetes/dashboards/` owns Grafana dashboard provisioning.
 - `infrastructure/kubernetes/alerts/` owns Prometheus alert rules.
 - `app/` owns the sample HTTP service and its metrics.
+- `docs/fundamentals/` owns theoretical explanations and knowledge checks.
+- `docs/runbooks/` owns executable procedures, expected outcomes, validation, troubleshooting, and cleanup.
+- `docs/appendices/` owns deeper optional explanations that are not required for the core metrics path.
 
 ## Chart Compatibility
 The monitoring stack pins `kube-prometheus-stack` chart `87.10.1`, which was the latest public chart release found in the Prometheus Community chart metadata on 2026-07-08.

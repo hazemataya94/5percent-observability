@@ -1,100 +1,67 @@
-# Observability Lab Runbook
+# Observability Lab Runbooks
 
 ## Purpose
-This runbook provides the local operating steps for the 5percent observability lab.
+This page is the prerequisite guide and index for the local 5percent observability lab runbooks.
+Use the core runbook as the single canonical procedure for the metrics lab.
 
-## Start The Lab
-Run these commands from `hape-academy/5percent/observability`.
+## Install Prerequisites
+The lab can install required local tools on supported operating systems.
+This command mutates the local machine, so review the planned commands first.
+
+If `make` is already available, use the Makefile target.
 
 ```bash
+DRY_RUN=1 make install-prereqs
+```
+
+Expected outcome: the installer prints the commands it would run without installing packages.
+
+Run the installer when the dry-run output looks correct.
+
+```bash
+make install-prereqs
 make check-prereqs
-make kind-up
-make monitoring-up
-make app-up
-make dashboard-up
 ```
 
-Expected outcome: the sample app runs in the `fivepercent-observability` namespace and monitoring runs in the `monitoring` namespace.
-
-## Open Grafana
-```bash
-make grafana-port-forward
-```
-
-Open `http://localhost:3000`.
-Use `admin` / `admin` for the local lab.
-
-## Open Prometheus
-```bash
-make prometheus-port-forward
-```
-
-Open `http://localhost:9090`.
-Query `fivepercent_http_requests_total` after generating traffic.
-
-## Generate Traffic
-```bash
-kubectl --context kind-fivepercent-observability -n fivepercent-observability port-forward svc/sample-metrics-app 8080:80
-curl http://localhost:8080/
-curl http://localhost:8080/work
-curl http://localhost:8080/work
-curl http://localhost:8080/metrics
-```
-
-Expected outcome: Prometheus and Grafana show changing request and business-event metrics.
-
-## Apply Alerts
-```bash
-make alerts-up
-make alertmanager-port-forward
-```
-
-Open `http://localhost:9093`.
-Expected outcome: Alertmanager is reachable and can receive alerts from Prometheus.
-
-## Optional Logging
-```bash
-make logging-up
-```
-
-Expected outcome: Loki installs in the `logging` namespace.
-This target is optional and not required for the main metrics session.
-
-## Troubleshooting
-If Prometheus does not scrape the app, check the `ServiceMonitor` label.
+If `make` is not available yet, start from the workspace root and run the installer directly, then rerun the Makefile checks.
 
 ```bash
-kubectl --context kind-fivepercent-observability -n fivepercent-observability get servicemonitor sample-metrics-app --show-labels
+cd hape-academy/5percent/observability
+DRY_RUN=1 ./scripts/install-prereqs.sh
+./scripts/install-prereqs.sh
+make check-prereqs
 ```
 
-Expected outcome: the labels include `release=kube-prometheus-stack`.
+Supported environments:
+- macOS through Homebrew.
+- Ubuntu or Debian through `apt-get`, the current Buildkite-hosted Helm repository, and verified official tool downloads.
+- Windows from Git Bash through `winget`, with a Helmfile fallback download when needed.
 
-If Grafana does not show the dashboard, check the dashboard ConfigMap label.
+Installer safety:
+- `DRY_RUN=1` prints commands without installing packages.
+- Downloaded `kind`, `kubectl`, and `helmfile` binaries are checksum-verified before installation.
+- The installer does not access Kubernetes clusters, cloud APIs, SSH hosts, databases, or remote Docker contexts.
 
-```bash
-kubectl --context kind-fivepercent-observability -n monitoring get configmap sample-metrics-app-dashboard --show-labels
-```
+Docker notes:
+- Docker Desktop on macOS and Windows may require manual startup after installation.
+- Docker on Ubuntu or Debian may require logging out and back in after Docker group changes.
+- `make check-prereqs` verifies tool binaries, but it does not prove the Docker daemon is running.
+- A regular Ubuntu container can validate dependency installation, but it cannot run `kind` unless a usable Docker daemon is configured separately.
 
-Expected outcome: the labels include `grafana_dashboard=1`.
+## Runbook Index
+- [Core Observability Lab](core-observability-lab.md) is the canonical executable metrics path from local setup through dashboard reading and observability design.
+- [Optional Alerting Lab](optional-alerting-lab.md) applies the sample alert rules and demonstrates pending, firing, and resolved states.
+- [Optional Logging Lab](optional-logging-lab.md) inspects application logs and demonstrates the boundary of the collector-free Loki installation.
 
-If the app image is not found, rebuild and reload the image.
+## Learning Order
+1. Complete [Core Observability Lab](core-observability-lab.md).
+2. Complete [Optional Alerting Lab](optional-alerting-lab.md) when you want to explore metric-based alerts.
+3. Complete [Optional Logging Lab](optional-logging-lab.md) when you want to compare direct logs with a logging storage component.
 
-```bash
-make app-build
-make app-load
-make app-up
-```
+The alerting and logging runbooks are independent optional extensions after the core metrics path.
 
-## Rollback
-Use the narrowest rollback first.
-
-```bash
-make alerts-down
-make dashboard-down
-make app-down
-make monitoring-down
-make logging-down
-make kind-down
-```
-
-Use `make clean` when the whole local cluster can be deleted.
+## Operating Boundary
+Run all procedures from `hape-academy/5percent/observability`.
+The Make targets in these runbooks hard-pin Kubernetes operations to the local `kind-fivepercent-observability` context.
+Every direct `kubectl` command also names that context explicitly.
+Do not adapt these exercises to another cluster.

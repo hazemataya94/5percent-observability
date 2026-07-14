@@ -11,7 +11,7 @@ PROMETHEUS_PORT ?= 9090
 ALERTMANAGER_PORT ?= 9093
 KUSTOMIZE_TARGET_PATH := $(word 2,$(MAKECMDGOALS))
 
-.PHONY: help check-prereqs ensure-kind-context kind-up kind-down monitoring-up monitoring-down logging-up logging-down app-build app-load app-up app-down dashboard-up dashboard-down alerts-up alerts-down grafana-port-forward prometheus-port-forward alertmanager-port-forward status clean kustomize-apply kustomize-delete
+.PHONY: help install-prereqs check-prereqs ensure-kind-context kind-up kind-down monitoring-up monitoring-down logging-up logging-down app-build app-load app-up app-down dashboard-up dashboard-down alerts-up alerts-down grafana-port-forward prometheus-port-forward alertmanager-port-forward status clean kustomize-apply kustomize-delete
 
 ifneq ($(filter kustomize-apply kustomize-delete,$(firstword $(MAKECMDGOALS))),)
   ifneq ($(KUSTOMIZE_TARGET_PATH),)
@@ -26,6 +26,9 @@ help: ## Show available commands.
 
 check-prereqs: ## Check required local tools.
 	./scripts/check-prereqs.sh
+
+install-prereqs: ## Install required local tools for supported OSes.
+	./scripts/install-prereqs.sh
 
 ensure-kind-context: ## Fail unless kubectl points at this lab's kind context.
 	@current_context=$$(kubectl config current-context 2>/dev/null || true); \

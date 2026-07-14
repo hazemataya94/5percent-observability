@@ -1,3 +1,11 @@
+IDEAS - ABD & Hazem
+
+Homework 2 options:
+- on the same repo: implement a form app, and create a metric of how many forms are submitted.
+- find a needed metric in your workplace and implement observability for this metric.
+
+---
+
 # Observability Session Brainstorming
 
 ## Purpose

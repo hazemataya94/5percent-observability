@@ -1,53 +1,79 @@
 # Logging With Loki
 
 ## Purpose
-This appendix explains where logging fits beside metrics in the local observability lab.
-The main lab uses Prometheus metrics first because metrics are easier to validate in a short session.
+This appendix provides a deeper explanation of where direct container logs, collectors, Loki, and Grafana fit in a logging pipeline.
+It complements the theory and executable runbook without claiming that the lab includes log ingestion.
+
+## Learning Path
+1. Read [Fundamentals 10: Logging](../fundamentals/10-logging-fundamentals.md) for the logging mental model.
+2. Run [Optional Logging Lab](../runbooks/optional-logging-lab.md) for the canonical inspection, optional installation, validation, and cleanup procedure.
+3. Use this appendix to understand the component boundaries and current omissions in more detail.
 
 ## Mental Model
 Metrics answer numeric questions over time.
 Logs answer event and detail questions for specific moments.
-Loki stores logs and lets Grafana query them with LogQL.
-
-## Install Loki
-Loki is kept in `infrastructure/kubernetes/helmfile-loki.yaml` instead of the core monitoring Helmfile.
-Install it only when the session needs the logging appendix.
-
-```bash
-make logging-up
-```
-
-Expected outcome: Loki runs in the `logging` namespace.
-
-```bash
-kubectl --context kind-fivepercent-observability -n logging get pods
-```
+Loki can store labeled log streams and serve LogQL queries when another component sends logs to it.
 
 ## What Is Included
-The lab includes a pinned Loki Helm release and lightweight local values.
-The values use single-binary mode and filesystem storage so the setup stays small for `kind`.
+The optional Helmfile installs the pinned Loki chart in the `logging` namespace.
+The local values use single-binary mode, one replica, filesystem storage, no persistence, and disabled caches.
+The configuration keeps Loki separate from the core metrics stack.
 
-## What Is Not Included Yet
+```text
+infrastructure/kubernetes/helmfile-loki.yaml
+  -> grafana/loki chart
+  -> logging namespace
+  -> single Loki StatefulSet
+```
+
+The storage is ephemeral.
+Removing the release or deleting the kind cluster removes its local data.
+
+## What Is Not Included
 The lab does not deploy a log collector by default.
-To complete the logging path, add a collector such as Promtail, Alloy, or another local-only agent that tails container logs and sends them to Loki.
+No component tails the sample app container logs, adds stream labels, or sends entries to Loki.
+The sample app logs are therefore not ingested into Loki.
+LogQL queries for sample app logs do not work in this lab and should not be presented as a validation step.
 
-## Suggested Teaching Flow
-1. Show app logs directly with `kubectl --context kind-fivepercent-observability logs`.
-2. Explain why direct log inspection does not scale across many pods.
-3. Install Loki with `make logging-up`.
-4. Add a collector in a later phase if the session needs full log querying.
-5. Compare a metrics query in Prometheus with a log query in Grafana.
+## Pipeline Boundaries
+The implemented path is:
 
-## Example Direct Log Check
-```bash
-kubectl --context kind-fivepercent-observability -n fivepercent-observability logs deploy/sample-metrics-app
+```text
+sample app -> container stdout and stderr -> Kubernetes pod logs -> kubectl logs
 ```
 
-Expected outcome: the app writes Flask request logs and Python runtime logs to stdout.
+The conceptual centralized path would require an additional collector stage:
 
-## Rollback
-```bash
-make logging-down
+```text
+sample app -> container logs -> collector -> Loki -> Grafana
 ```
 
-Expected outcome: the optional Loki release is removed from the local cluster.
+The second path is a component model only and is not implemented by this lab.
+
+## Direct Log Inspection
+Use the [Optional Logging Lab](../runbooks/optional-logging-lab.md) for the complete exercise.
+This command shows the currently implemented app-log path.
+
+```bash
+kubectl --context kind-fivepercent-observability -n fivepercent-observability logs -l app.kubernetes.io/name=sample-metrics-app --all-containers=true --tail=50 --prefix=true
+```
+
+Expected outcome: Kubernetes returns startup or HTTP request records from the selected app pods.
+
+## Label Design
+Loki indexes labels rather than the full contents of every log line.
+A collector normally attaches bounded labels such as namespace, workload, container, or application name before sending a stream.
+Unbounded values such as request identifiers should remain in the log content instead of becoming stream labels.
+
+This distinction matters because every unique label set creates a separate stream.
+
+## Design Questions
+- Which events require logs rather than metrics?
+- Which bounded labels are needed to find a workload's logs?
+- Which values must remain in the log body?
+- How long would local ephemeral storage be useful for the exercise?
+- Which component owns collection, storage, and visualization?
+
+## Validation And Cleanup
+Use the [Optional Logging Lab validation and cleanup](../runbooks/optional-logging-lab.md#validation) as the executable source of truth.
+The required final state is a functioning direct `kubectl logs` path with the optional Loki release removed after the exercise.

@@ -8,8 +8,6 @@ It connects a running application to Kubernetes resources, raw Prometheus metric
 
 ## Prerequisites
 
-- Work from `hape-academy/5percent/observability`.
-
 - Complete the installation and operating-system notes in the [runbook index](README.md).
 
 - Ensure Docker is running.

@@ -1,13 +1,19 @@
 # Optional Logging Lab
 
 ## Purpose
+
 This optional runbook compares direct Kubernetes log inspection with the boundary of the local Loki installation.
+
 Read [Fundamentals 10: Logging](../fundamentals/10-logging-fundamentals.md) for the theory and [Logging With Loki](../appendices/logging-with-loki.md) for the deeper component explanation.
 
 ## Prerequisites
+
 - Complete the [Core Observability Lab](core-observability-lab.md) through application deployment.
+
 - Work from `hape-academy/5percent/observability`.
+
 - Keep the local `kind-fivepercent-observability` cluster and sample app running.
+
 - Keep at least 512 MiB of local cluster memory available for the optional Loki container limit.
 
 Verify that the app pods are ready.
@@ -19,6 +25,7 @@ kubectl --context kind-fivepercent-observability -n fivepercent-observability ge
 Expected outcome: two sample app pods report `Running` and ready.
 
 ## Checkpoint: Inspect Logs And Loki Boundaries
+
 Inspect recent application logs directly through the Kubernetes API.
 
 ```bash
@@ -28,6 +35,7 @@ kubectl --context kind-fivepercent-observability -n fivepercent-observability lo
 Expected outcome: the output contains startup or HTTP request records from the sample app pods.
 
 Explanation: `kubectl logs` reads container stdout and stderr for selected pods and is sufficient for a small local inspection.
+
 It does not provide a central historical query path across changing pods.
 
 If you need fresh request records, expose the app in terminal 1.
@@ -46,6 +54,7 @@ curl http://localhost:8080/work
 Stop the app port-forward with `Ctrl-C` when the direct log check is complete.
 
 The Loki installation is optional.
+
 Skip the remaining installation steps if you only need the direct Kubernetes log exercise.
 
 Install Loki through the local Helmfile target.
@@ -66,8 +75,11 @@ Expected outcome: the `loki` StatefulSet reaches its ready state and the Loki re
 Explanation: this lab installs Loki in single-binary mode with local filesystem storage and no persistent volume.
 
 The lab does not deploy a log collector.
+
 Without a collector, the sample application's container logs are not ingested into Loki.
+
 Do not run or present LogQL queries for the sample app because no sample app log stream exists in Loki.
+
 Installing the storage component alone does not create a complete logging pipeline.
 
 The boundary is:
@@ -82,6 +94,7 @@ Expected outcome: you can explain that direct app logs are available through Kub
 Validation: identify the missing collector role that would read container logs, add labels, and send entries to Loki, without adding that component to this lab.
 
 ## Validation
+
 Confirm the direct log path still works.
 
 ```bash
@@ -96,9 +109,11 @@ kubectl --context kind-fivepercent-observability -n logging get pods
 ```
 
 Expected outcome: direct app logs are readable and, when installed, Loki is ready as a storage component.
+
 This validation does not claim that application logs are stored in Loki.
 
 ## Troubleshooting
+
 If direct logs are empty, generate a request and select the pods again.
 
 ```bash
@@ -117,6 +132,7 @@ kubectl --context kind-fivepercent-observability -n logging get events --sort-by
 If a Grafana log view has no sample app streams, treat that as expected because the lab has no collector.
 
 ## Cleanup
+
 Remove Loki if it was installed.
 
 ```bash
@@ -124,6 +140,7 @@ make logging-down
 ```
 
 Expected outcome: the optional Loki Helm release and workloads are removed from the local cluster.
+
 The `logging` namespace may remain empty after the Helm release is removed.
 
 Verify that the Loki StatefulSet is absent.

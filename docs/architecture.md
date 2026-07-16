@@ -1,10 +1,13 @@
 # Observability Lab Architecture
 
 ## Purpose
+
 This document explains the local architecture for the 5percent observability lab.
+
 The lab keeps platform setup, application workload, dashboards, and optional appendices separated so each teaching phase can be run independently.
 
 ## Component Topology
+
 ```mermaid
 flowchart TD
   makefile["Makefile<br>learner entrypoint"] --> kind["kind cluster<br>fivepercent-observability"]
@@ -33,6 +36,7 @@ flowchart TD
 ```
 
 ## Runtime Flow
+
 ```mermaid
 sequenceDiagram
   participant Learner
@@ -58,6 +62,7 @@ sequenceDiagram
 ```
 
 ## Learning And Documentation Flow
+
 The documentation separates conceptual explanation from executable operations while keeping each topic linked to an observable checkpoint.
 
 ```mermaid
@@ -70,24 +75,39 @@ flowchart LR
 ```
 
 Start with this architecture document, continue through `docs/fundamentals/README.md`, and execute the linked checkpoints in `docs/runbooks/core-observability-lab.md`.
+
 The optional alerting and logging runbooks come after the core metrics path.
 
 ## Boundary Rules
+
 - `Makefile` owns local commands and hides repeated flags from learners.
+
 - `infrastructure/kubernetes/helmfile.yaml` owns Helm chart releases.
+
 - `infrastructure/kubernetes/apps/` owns workload manifests.
+
 - `infrastructure/kubernetes/dashboards/` owns Grafana dashboard provisioning.
+
 - `infrastructure/kubernetes/alerts/` owns Prometheus alert rules.
+
 - `app/` owns the sample HTTP service and its metrics.
+
 - `docs/fundamentals/` owns theoretical explanations and knowledge checks.
+
 - `docs/runbooks/` owns executable procedures, expected outcomes, validation, troubleshooting, and cleanup.
+
 - `docs/appendices/` owns deeper optional explanations that are not required for the core metrics path.
 
 ## Chart Compatibility
+
 The monitoring stack pins `kube-prometheus-stack` chart `87.10.1`, which was the latest public chart release found in the Prometheus Community chart metadata on 2026-07-08.
+
 The optional logging appendix pins Grafana Loki chart `6.55.0` from `https://grafana.github.io/helm-charts`.
+
 The public Loki migration documentation identifies this as the final Grafana-repo Loki chart family before the community-chart migration path.
 
 ## Resource Model
+
 The lab uses memory limits and CPU requests only.
+
 This keeps the manifests compatible with the workspace Kubernetes rule that forbids CPU limits.
